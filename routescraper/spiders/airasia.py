@@ -11,25 +11,18 @@ from routescraper.items import RouteItem
 class AirAsiaSpider(scrapy.Spider):
     name = "airasia"
     allowed_domains = ["airasia.com"]
-    start_urls = [
-        'http://www.airasia.com/ot/en/home.page?cid=1'
-    ]
 
     def __init__(self):
         sys.stdout = codecs.getwriter(
             locale.getpreferredencoding())(sys.stdout)
         reload(sys)
         sys.setdefaultencoding('utf-8')
-        super(AirAsiaSpider, self).__init__()
-
-    def parse(self, response):
         self.origin = 'SIN'
         self.destination = 'DPS'
-        self.depart = '2017-01-08'
+        self.depart = '2017-01-09'
         self.adult = '1'
         self.child = '0'
         self.infant = '0'
-        # https://booking.airasia.com/Flight/Select?o1=SIN&d1=DPS&culture=en-GB&dd1=2017-01-08&ADT=1&CHD=0&inl=0&s=true&mon=true&cc=SGD&c=false
         url = (
             "https://booking.airasia.com/Flight/Select?o1"
             "={0}&d1={1}&culture=en-GB&dd1={2}&ADT={3}&CHD=0"
@@ -37,9 +30,10 @@ class AirAsiaSpider(scrapy.Spider):
                 self.origin, self.destination, self.depart, self.adult
             )
         )
-        yield scrapy.Request(url, self.parse_results)
+        self.start_urls = [url]
+        super(AirAsiaSpider, self).__init__()
 
-    def parse_results(self, response):
+    def parse(self, response):
         item = RouteItem()
 
         item['origin'] = self.origin
@@ -47,10 +41,10 @@ class AirAsiaSpider(scrapy.Spider):
         item['num_adult'] = self.adult
         item['num_child'] = self.child
         item['num_infant'] = self.infant
-
-        body = response.xpath("//body").extract_first()
-        with open('airasia.html', 'wb') as htmlfile:
-            htmlfile.write(body)
+        item['currency'] = 'SGD'
+        # body = response.xpath("//body").extract_first()
+        # with open('airasia.html', 'wb') as htmlfile:
+        #     htmlfile.write(body)
 
         # get a list of all prices
         prices = response.xpath(
