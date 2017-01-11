@@ -3,6 +3,7 @@ import scrapy
 import sys
 import codecs
 import locale
+import json
 from datetime import datetime, timedelta
 
 from routescraper.items import RouteItem
@@ -12,17 +13,23 @@ class AirAsiaSpider(scrapy.Spider):
     name = "airasia"
     allowed_domains = ["airasia.com"]
 
-    def __init__(self):
+    def __init__(self, data):
+        if type(data) == str:
+            try:
+                data = json.loads(data)
+            except:
+                raise
         sys.stdout = codecs.getwriter(
             locale.getpreferredencoding())(sys.stdout)
         reload(sys)
         sys.setdefaultencoding('utf-8')
-        self.origin = 'SIN'
-        self.destination = 'DPS'
-        self.depart = '2017-01-09'
-        self.adult = '1'
-        self.child = '0'
-        self.infant = '0'
+
+        self.origin = data.get('origin', 'SIN')
+        self.destination = data.get('destination', 'DPS')
+        self.depart = data('departure_date', '2017-01-12')
+        self.adult = data.get('num_adult', '1')
+        self.child = data.get('num_child', '0')
+        self.infant = data.get('num_infant', '0')
         url = (
             "https://booking.airasia.com/Flight/Select?o1"
             "={0}&d1={1}&culture=en-GB&dd1={2}&ADT={3}&CHD=0"
@@ -42,9 +49,6 @@ class AirAsiaSpider(scrapy.Spider):
         item['num_child'] = self.child
         item['num_infant'] = self.infant
         item['currency'] = 'SGD'
-        # body = response.xpath("//body").extract_first()
-        # with open('airasia.html', 'wb') as htmlfile:
-        #     htmlfile.write(body)
 
         # get a list of all prices
         prices = response.xpath(

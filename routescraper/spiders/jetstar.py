@@ -3,6 +3,7 @@ import scrapy
 import sys
 import codecs
 import locale
+import json
 from datetime import datetime
 
 from routescraper.items import RouteItem
@@ -12,17 +13,22 @@ class JetStarSpider(scrapy.Spider):
     name = "jetstar"
     allowed_domains = ["jetstar.com"]
 
-    def __init__(self):
+    def __init__(self, data):
+        if type(data) == str:
+            try:
+                data = json.loads(data)
+            except:
+                raise
         sys.stdout = codecs.getwriter(
             locale.getpreferredencoding())(sys.stdout)
         reload(sys)
         sys.setdefaultencoding('utf-8')
-        self.origin = 'SIN'
-        self.destination = 'DPS'
-        self.depart = '2017-01-09'
-        self.adult = '1'
-        self.child = '0'
-        self.infant = '0'
+        self.origin = data.get('origin', 'SIN')
+        self.destination = data.get('destination', 'DPS')
+        self.depart = data('departure_date', '2017-01-12')
+        self.adult = data.get('num_adult', '1')
+        self.child = data.get('num_child', '0')
+        self.infant = data.get('num_infant', '0')
         url = (
             "https://booking.jetstar.com/sg/en/booking/search-flights"
             "?origin1={0}&destination1={1}&departuredate1={2}"
@@ -43,9 +49,6 @@ class JetStarSpider(scrapy.Spider):
         item['num_child'] = self.child
         item['num_infant'] = self.infant
 
-        # body = response.xpath("//body").extract_first()
-        # with open('jetstar.html', 'wb') as htmlfile:
-        #     htmlfile.write(body)
         elem = response.xpath(
             "//div[contains(@class, 'fare-row js-fare-row')]"
         )
