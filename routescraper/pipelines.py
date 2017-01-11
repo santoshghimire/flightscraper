@@ -8,4 +8,7 @@
 
 class RoutescraperPipeline(object):
     def process_item(self, item, spider):
+        # USE BOTO3 to save item to Redshift
+        # Create a table in redshift to store the items.
+        # and insert row in the table.
         return item
