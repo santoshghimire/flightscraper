@@ -4,11 +4,18 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
+from redshift_wrapper import RedshiftWrapper
 
 
 class RoutescraperPipeline(object):
+
+    def __init__(self):
+        self.db = RedshiftWrapper()
+
     def process_item(self, item, spider):
-        # USE BOTO3 to save item to Redshift
-        # Create a table in redshift to store the items.
-        # and insert row in the table.
+        # Insert data to Redshift table
+        self.db.insert_row(item)
         return item
+
+    def close_spider(self, spider):
+        self.db.close()
