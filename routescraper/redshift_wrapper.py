@@ -1,4 +1,5 @@
 import uuid
+import json
 import psycopg2
 from datetime import datetime
 
@@ -6,19 +7,16 @@ from datetime import datetime
 class RedshiftWrapper(object):
     """Wrapper to insert data to Redshift database."""
 
-    host = "flightsdata.cvcioaodlgvz.us-east-1.redshift.amazonaws.com"
-    user = "admin"
-    dbname = "flightsdata"
-    port = "5439"
-    password = ""
-
     def __init__(self):
         try:
+            with open('redshift_auth.json') as authfile:
+                auth = json.load(authfile)
+                print(auth)
             self.conn = psycopg2.connect(
                 "dbname='{0}' user='{1}' "
                 "host='{2}' port='{3}' password='{4}'".format(
-                    self.dbname, self.user, self.host,
-                    self.port, self.password
+                    auth['dbname'], auth['user'], auth['host'],
+                    auth['port'], auth['password']
                 )
             )
         except:
@@ -75,27 +73,30 @@ class RedshiftWrapper(object):
         return True
 
     def close(self):
-        self.conn.close()
+        try:
+            self.conn.close()
+        except:
+            pass
 
 
 if __name__ == '__main__':
     r = RedshiftWrapper()
     # r.create_table()
-    item = {
-        'airline_name': 'QZ - PT Indonesia AirAsia',
-        'arrival_date': '2017-01-09 15:10',
-        'days_to_flight': 0,
-        'departure_date': '2017-01-09 12:15',
-        'destination': 'DPS',
-        'flight_number': 'QZ  505',
-        'num_adult': '1',
-        'num_child': '0',
-        'num_infant': '0',
-        'origin': 'SIN',
-        'price': 129.8,
-        'currency': 'SGD',
-        'price_date': '2017-01-08',
-        'fare_class': ''
-    }
-    r.insert_row(item)
+    # item = {
+    #     'airline_name': 'QZ - PT Indonesia AirAsia',
+    #     'arrival_date': '2017-01-09 15:10',
+    #     'days_to_flight': 0,
+    #     'departure_date': '2017-01-09 12:15',
+    #     'destination': 'DPS',
+    #     'flight_number': 'QZ  505',
+    #     'num_adult': '1',
+    #     'num_child': '0',
+    #     'num_infant': '0',
+    #     'origin': 'SIN',
+    #     'price': 129.8,
+    #     'currency': 'SGD',
+    #     'price_date': '2017-01-08',
+    #     'fare_class': ''
+    # }
+    # r.insert_row(item)
     r.close()

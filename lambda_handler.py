@@ -41,14 +41,20 @@ def lambda_handler(event, context):
         logger.info('No records')
         return False
     else:
+        formatted_records = {
+            'airasia': [],
+            'jetstar': []
+        }
         for record in records:
             if record['eventName'] != 'INSERT':
                 continue
-            data = {
+            queue_data = {
                 key: value['S'] for key, value in record['NewImage'].items()
             }
-            if data.get('status') != 'completed':
-                h = LambdaHandler(data=data)
-                h.handle()
+            if queue_data.get('status') != 'completed':
+                formatted_records[queue_data['site']].append(queue_data)
+        for site, site_records in formatted_records.items():
+            h = LambdaHandler(data=site_records)
+            h.handle()
             # update dynamodb
     return True

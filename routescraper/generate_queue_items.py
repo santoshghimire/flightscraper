@@ -24,10 +24,16 @@ def generate():
         {"origin": "PEN", "destination": "SIN"},
         {"origin": "HKT", "destination": "SIN"}
     ]
-    for route in routes:
-        today = datetime.today()
-        for site in ["airasia", "jetstar"]:
+    print("Generating scraping queue items for next 365 days ...")
+    for count, site in enumerate(["airasia", "jetstar"]):
+        for route in routes:
+            today = datetime.today()
             items = []
+            print(
+                "{0}: {1} to {2}".format(
+                    site.title(), route['origin'], route['destination']
+                )
+            )
             for i in range(1, 366):
                 each_date = today + timedelta(days=i)
                 departure_date = each_date.strftime("%Y-%m-%d")
@@ -45,7 +51,8 @@ def generate():
                 items.append(item)
             # batch write
             batch_write(table_name=table_name, items=items)
-            time.sleep(1)
+        if not count:
+            time.sleep(10)
     return True
 
 if __name__ == '__main__':

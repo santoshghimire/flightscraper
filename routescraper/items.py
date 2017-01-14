@@ -10,14 +10,13 @@ import scrapy
 
 class RouteItem(scrapy.Item):
     # define the fields for your item here like:
+    uuid = scrapy.Field()
     airline_name = scrapy.Field()
-
     origin = scrapy.Field()
     destination = scrapy.Field()
     num_adult = scrapy.Field()
     num_child = scrapy.Field()
     num_infant = scrapy.Field()
-
     flight_number = scrapy.Field()
     fare_class = scrapy.Field()
     departure_date = scrapy.Field()

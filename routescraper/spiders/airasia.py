@@ -3,7 +3,9 @@ import scrapy
 import sys
 import codecs
 import locale
-import json
+# import json
+import urlparse
+import uuid
 from datetime import datetime, timedelta
 
 from routescraper.items import RouteItem
@@ -12,43 +14,55 @@ from routescraper.items import RouteItem
 class AirAsiaSpider(scrapy.Spider):
     name = "airasia"
     allowed_domains = ["airasia.com"]
+    start_urls = []
 
-    def __init__(self, data):
-        if type(data) == str:
-            try:
-                data = json.loads(data)
-            except:
-                raise
+    def __init__(self, data=None):
         sys.stdout = codecs.getwriter(
             locale.getpreferredencoding())(sys.stdout)
         reload(sys)
         sys.setdefaultencoding('utf-8')
-
-        self.origin = data.get('origin', 'SIN')
-        self.destination = data.get('destination', 'DPS')
-        self.depart = data('departure_date', '2017-01-12')
-        self.adult = data.get('num_adult', '1')
-        self.child = data.get('num_child', '0')
-        self.infant = data.get('num_infant', '0')
-        url = (
-            "https://booking.airasia.com/Flight/Select?o1"
-            "={0}&d1={1}&culture=en-GB&dd1={2}&ADT={3}&CHD=0"
-            "&inl=0&s=true&mon=true&cc=SGD&c=false".format(
-                self.origin, self.destination, self.depart, self.adult
+        if not data:
+            today = datetime.today()
+            depart_obj = today + timedelta(days=2)
+            depart_date = depart_obj.strftime("%Y-%m-%d")
+            data = [{
+                'processing_status': 'pending',
+                'origin': 'SIN',
+                'destination': 'DPS',
+                'crawl_date': today.strftime("%Y-%m-%d"),
+                'departure_date': depart_date,
+                'num_adult': '1',
+                'num_child': '0',
+                'num_infant': '0',
+                'site': 'airasia',
+                'uuid': str(uuid.uuid4())
+            }]
+            print('From cmd, using dummy input data', data)
+        for record in data:
+            url = (
+                "https://booking.airasia.com/Flight/Select?o1"
+                "={0}&d1={1}&culture=en-GB&dd1={2}&ADT={3}&CHD=0"
+                "&inl=0&s=true&mon=true&cc=SGD&c=false&uuid={4}".format(
+                    record['origin'], record['destination'],
+                    record['departure_date'], record['num_adult'],
+                    record['uuid']
+                )
             )
-        )
-        self.start_urls = [url]
+            self.start_urls.append(url)
         super(AirAsiaSpider, self).__init__()
 
     def parse(self, response):
         item = RouteItem()
-
-        item['origin'] = self.origin
-        item['destination'] = self.destination
-        item['num_adult'] = self.adult
-        item['num_child'] = self.child
-        item['num_infant'] = self.infant
-        item['currency'] = 'SGD'
+        params = urlparse.parse_qs(response.url)
+        item['origin'] = params[
+            'https://booking.airasia.com/Flight/Select?o1'][0]
+        item['destination'] = params['d1'][0]
+        item['num_adult'] = params['ADT'][0]
+        item['num_child'] = params['CHD'][0]
+        item['num_infant'] = params['inl'][0]
+        item['currency'] = params['cc'][0]
+        depart = params['dd1'][0]
+        item['uuid'] = params['uuid'][0]
 
         # get a list of all prices
         prices = response.xpath(
@@ -58,7 +72,7 @@ class AirAsiaSpider(scrapy.Spider):
             float(i.strip().replace('SGD', '').strip()) for i in prices
         ]
         min_price = min(price_list)
-        item['price'] = str(min_price) + ' SGD'
+        item['price'] = min_price
         actual_min_price = prices[price_list.index(min_price)]
 
         # find actual min flight element
@@ -72,7 +86,7 @@ class AirAsiaSpider(scrapy.Spider):
             ".//tr[@class='fare-dark-row']/td[@class='avail-table-detail']"
         )[0].xpath(".//div[@class='avail-table-bold']/text()").extract_first()
 
-        item['departure_date'] = self.depart + ' ' + depart_time
+        item['departure_date'] = depart + ' ' + depart_time
 
         # arrival time
         arrive_time = detail_elem.xpath(
@@ -85,7 +99,7 @@ class AirAsiaSpider(scrapy.Spider):
         )[1].xpath(
             ".//div[@class='avail-table-next-day']/text()"
         ).extract_first()
-        departure_date_obj = datetime.strptime(self.depart, "%Y-%m-%d")
+        departure_date_obj = datetime.strptime(depart, "%Y-%m-%d")
         arrival_date_obj = departure_date_obj
         if arrive_day == '+1':
             arrival_date_obj = departure_date_obj + timedelta(1)
@@ -106,4 +120,7 @@ class AirAsiaSpider(scrapy.Spider):
             i for i in carriers if i.startswith(career_symbol + ' -')]
         if airline_name:
             item['airline_name'] = airline_name[0]
+        else:
+            item['airline_name'] = ''
+        item['fare_class'] = ''
         yield item

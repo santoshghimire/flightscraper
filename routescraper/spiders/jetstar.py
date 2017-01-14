@@ -3,8 +3,8 @@ import scrapy
 import sys
 import codecs
 import locale
-import json
-from datetime import datetime
+import uuid
+from datetime import datetime, timedelta
 
 from routescraper.items import RouteItem
 
@@ -12,42 +12,61 @@ from routescraper.items import RouteItem
 class JetStarSpider(scrapy.Spider):
     name = "jetstar"
     allowed_domains = ["jetstar.com"]
+    start_urls = ['http://www.jetstar.com/sg/en/home']
 
-    def __init__(self, data):
-        if type(data) == str:
-            try:
-                data = json.loads(data)
-            except:
-                raise
+    def __init__(self, data=None):
         sys.stdout = codecs.getwriter(
             locale.getpreferredencoding())(sys.stdout)
         reload(sys)
         sys.setdefaultencoding('utf-8')
-        self.origin = data.get('origin', 'SIN')
-        self.destination = data.get('destination', 'DPS')
-        self.depart = data('departure_date', '2017-01-12')
-        self.adult = data.get('num_adult', '1')
-        self.child = data.get('num_child', '0')
-        self.infant = data.get('num_infant', '0')
-        url = (
-            "https://booking.jetstar.com/sg/en/booking/search-flights"
-            "?origin1={0}&destination1={1}&departuredate1={2}"
-            "&adults={3}&children={4}&infants={5}&currency=SGD".format(
-                self.origin, self.destination, self.depart, self.adult,
-                self.child, self.infant
-            )
-        )
-        self.start_urls = [url]
+        if not data:
+            today = datetime.today()
+            depart_obj = today + timedelta(days=2)
+            depart_date = depart_obj.strftime("%Y-%m-%d")
+            data = [{
+                'processing_status': 'pending',
+                'origin': 'SIN',
+                'destination': 'DPS',
+                'crawl_date': today.strftime("%Y-%m-%d"),
+                'departure_date': depart_date,
+                'num_adult': '1',
+                'num_child': '0',
+                'num_infant': '0',
+                'site': 'jetstar',
+                'uuid': str(uuid.uuid4())
+            }]
+            print('From cmd, using dummy input data', data)
+        self.data = data
         super(JetStarSpider, self).__init__()
 
     def parse(self, response):
+        for record in self.data:
+            url = (
+                "https://booking.jetstar.com/sg/en/booking/search-flights"
+                "?origin1={0}&destination1={1}&departuredate1={2}"
+                "&adults={3}&children={4}&infants={5}&currency=SGD"
+                "&uuid={6}".format(
+                    record['origin'], record['destination'],
+                    record['departure_date'], record['num_adult'],
+                    record['num_child'], record['num_infant'],
+                    record['uuid']
+                )
+            )
+            yield scrapy.Request(
+                url, callback=self.parse_results,
+                meta=record
+            )
+
+    def parse_results(self, response):
         item = RouteItem()
 
-        item['origin'] = self.origin
-        item['destination'] = self.destination
-        item['num_adult'] = self.adult
-        item['num_child'] = self.child
-        item['num_infant'] = self.infant
+        item['origin'] = response.meta['origin']
+        item['destination'] = response.meta['destination']
+        item['num_adult'] = response.meta['num_adult']
+        item['num_child'] = response.meta['num_child']
+        item['num_infant'] = response.meta['num_infant']
+        depart = response.meta['departure_date']
+        item['uuid'] = response.meta['uuid']
 
         elem = response.xpath(
             "//div[contains(@class, 'fare-row js-fare-row')]"
@@ -63,7 +82,7 @@ class JetStarSpider(scrapy.Spider):
             "'columns fare__departure-time js-departure-time departuretime'"
             "]/span/text()"
         ).extract_first().strip()
-        full_depart_datetime = self.depart + ' ' + depart_time +\
+        full_depart_datetime = depart + ' ' + depart_time +\
             ' ' + am_pm.upper()
         depart_date_obj = datetime.strptime(
             full_depart_datetime, "%Y-%m-%d %I:%M %p")
