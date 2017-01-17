@@ -122,7 +122,7 @@ pydispatch
 queuelib
 s3transfer
 scrapy
-service_identify
+service_identity
 setuptools
 twisted
 w3lib
