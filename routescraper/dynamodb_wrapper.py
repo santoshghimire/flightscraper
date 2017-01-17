@@ -89,29 +89,29 @@ if __name__ == '__main__':
     # )
     # print(response)
     # 4. Batch write
-    # items = [
-    #     {
-    #         'processing_status': 'pending',
-    #         'origin': 'SIN',
-    #         'destination': 'DPS',
-    #         'crawl_date': '2017-01-13',
-    #         'departure_date': '2017-01-15',
-    #         'num_adult': '1',
-    #         'num_child': '0',
-    #         'num_infant': '0',
-    #         'site': 'airasia'
-    #     },
-    #     {
-    #         'processing_status': 'pending',
-    #         'origin': 'SIN',
-    #         'destination': 'DPS',
-    #         'crawl_date': '2017-01-13',
-    #         'departure_date': '2017-01-15',
-    #         'num_adult': '1',
-    #         'num_child': '0',
-    #         'num_infant': '0',
-    #         'site': 'jetstar'
-    #     }
-    # ]
-    # status = batch_write(table_name=table_name, items=items)
-    # print(status)
+    items = [
+        {
+            'processing_status': 'pending',
+            'origin': 'SIN',
+            'destination': 'DPS',
+            'crawl_date': '2017-01-16',
+            'departure_date': '2017-01-18',
+            'num_adult': '1',
+            'num_child': '0',
+            'num_infant': '0',
+            'site': 'airasia'
+        },
+        {
+            'processing_status': 'pending',
+            'origin': 'SIN',
+            'destination': 'DPS',
+            'crawl_date': '2017-01-16',
+            'departure_date': '2017-01-18',
+            'num_adult': '1',
+            'num_child': '0',
+            'num_infant': '0',
+            'site': 'jetstar'
+        }
+    ]
+    status = batch_write(table_name=table_name, items=items)
+    print(status)

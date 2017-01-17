@@ -92,3 +92,4 @@ ENV/
 browsers
 .details
 redshift_auth.json
+*.zip

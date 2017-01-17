@@ -120,7 +120,7 @@ extern "C" {
 #ifndef WITH_MODULES
 #define WITH_MODULES
 #endif
-#define LIBXSLT_DEFAULT_PLUGINS_PATH() "/tmp/pip-O0laJZ-build/build/tmp/libxml2/lib/libxslt-plugins"
+#define LIBXSLT_DEFAULT_PLUGINS_PATH() "/tmp/pip-EpoVHk-build/build/tmp/libxml2/lib/libxslt-plugins"
 #endif
 
 /**

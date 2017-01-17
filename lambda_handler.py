@@ -49,12 +49,12 @@ def lambda_handler(event, context):
             if record['eventName'] != 'INSERT':
                 continue
             queue_data = {
-                key: value['S'] for key, value in record['NewImage'].items()
+                key: value['S'] for key, value in
+                record['dynamodb']['NewImage'].items()
             }
             if queue_data.get('status') != 'completed':
                 formatted_records[queue_data['site']].append(queue_data)
         for site, site_records in formatted_records.items():
             h = LambdaHandler(data=site_records)
             h.handle()
-            # update dynamodb
     return True
