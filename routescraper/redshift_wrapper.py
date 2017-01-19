@@ -11,7 +11,6 @@ class RedshiftWrapper(object):
         try:
             with open('redshift_auth.json') as authfile:
                 auth = json.load(authfile)
-                print(auth)
             self.conn = psycopg2.connect(
                 "dbname='{0}' user='{1}' "
                 "host='{2}' port='{3}' password='{4}'".format(

@@ -52,14 +52,61 @@ def update_item(table_name, item_uuid, new_status):
         return False
 
 
-def scan_item(table_name, status):
+def scan_item(table_name, status, crawl_date):
     dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
     table = dynamodb.Table(table_name)
     response = table.scan(
-        FilterExpression=Attr('processing_status').eq(status)
+        FilterExpression=Attr('processing_status').eq(status) &
+        Attr('crawl_date').eq(crawl_date)
     )
     items = response['Items']
     return items
+
+
+def delete_item(table_name, uuid):
+    dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
+    table = dynamodb.Table(table_name)
+    response = table.delete_item(
+        Key={'uuid': uuid}
+    )
+    if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+        return True
+    else:
+        return False
+
+
+def create_table(table_name):
+    # Create the DynamoDB table.
+    dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
+    table = dynamodb.create_table(
+        TableName=table_name,
+        KeySchema=[
+            {
+                'AttributeName': 'uuid',
+                'KeyType': 'HASH'
+            }
+        ],
+        AttributeDefinitions=[
+            {
+                'AttributeName': 'uuid',
+                'AttributeType': 'S'
+            },
+        ],
+        ProvisionedThroughput={
+            'ReadCapacityUnits': 5,
+            'WriteCapacityUnits': 5
+        }
+    )
+    return table
+
+
+def delete_all_items(table_name):
+    dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
+    table = dynamodb.Table(table_name)
+    table.delete()
+    table = create_table(table_name)
+    if table:
+        print("Success !!")
 
 
 if __name__ == '__main__':
@@ -89,29 +136,36 @@ if __name__ == '__main__':
     # )
     # print(response)
     # 4. Batch write
-    items = [
-        {
-            'processing_status': 'pending',
-            'origin': 'SIN',
-            'destination': 'DPS',
-            'crawl_date': '2017-01-16',
-            'departure_date': '2017-01-18',
-            'num_adult': '1',
-            'num_child': '0',
-            'num_infant': '0',
-            'site': 'airasia'
-        },
-        {
-            'processing_status': 'pending',
-            'origin': 'SIN',
-            'destination': 'DPS',
-            'crawl_date': '2017-01-16',
-            'departure_date': '2017-01-18',
-            'num_adult': '1',
-            'num_child': '0',
-            'num_infant': '0',
-            'site': 'jetstar'
-        }
-    ]
-    status = batch_write(table_name=table_name, items=items)
-    print(status)
+    # items = [
+    #     {
+    #         'processing_status': 'pending',
+    #         'origin': 'SIN',
+    #         'destination': 'DPS',
+    #         'crawl_date': '2017-01-16',
+    #         'departure_date': '2017-01-18',
+    #         'num_adult': '1',
+    #         'num_child': '0',
+    #         'num_infant': '0',
+    #         'site': 'airasia'
+    #     },
+    #     {
+    #         'processing_status': 'pending',
+    #         'origin': 'SIN',
+    #         'destination': 'DPS',
+    #         'crawl_date': '2017-01-16',
+    #         'departure_date': '2017-01-18',
+    #         'num_adult': '1',
+    #         'num_child': '0',
+    #         'num_infant': '0',
+    #         'site': 'jetstar'
+    #     }
+    # ]
+    # status = batch_write(table_name=table_name, items=items)
+    # print(status)
+    # uuid_string = "e591334f-5384-4794-a76d-f58a1bb14d3c"
+    # status = delete_item(
+    #     table_name=table_name,
+    #     uuid=uuid_string
+    # )
+    # print(status)
+    # delete_all_items(table_name=table_name)

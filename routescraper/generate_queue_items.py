@@ -2,6 +2,14 @@ from datetime import datetime, timedelta
 from dynamodb_wrapper import batch_write
 import time
 
+import logging
+logger = logging.getLogger('queueGen')
+hdlr = logging.FileHandler('/var/tmp/queueGen.log')
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+hdlr.setFormatter(formatter)
+logger.addHandler(hdlr)
+logger.setLevel(logging.INFO)
+
 
 def generate():
     """
@@ -24,12 +32,12 @@ def generate():
         {"origin": "PEN", "destination": "SIN"},
         {"origin": "HKT", "destination": "SIN"}
     ]
-    print("Generating scraping queue items for next 365 days ...")
+    logger.info("Generating scraping queue items for next 365 days ...")
     for count, site in enumerate(["airasia", "jetstar"]):
         for route in routes:
             today = datetime.today()
             items = []
-            print(
+            logger.info(
                 "{0}: {1} to {2}".format(
                     site.title(), route['origin'], route['destination']
                 )
@@ -51,7 +59,7 @@ def generate():
                 items.append(item)
             # batch write
             batch_write(table_name=table_name, items=items)
-        if not count:
+            logger.info('ok')
             time.sleep(10)
     return True
 

@@ -1,11 +1,11 @@
 from abc import ABCMeta, abstractmethod
-import logging
+# import logging
 
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+# logger = logging.getLogger()
+# logger.setLevel(logging.INFO)
 
 
 class BaseLambdaHandler(object):
@@ -17,28 +17,28 @@ class BaseLambdaHandler(object):
 
 
 class LambdaHandler(BaseLambdaHandler):
-    def __init__(self, data):
-        self.data = data
-        logger.info('New Data: {0}'.format(data))
+    def __init__(self, formatted_records):
+        self.formatted_records = formatted_records
+        # logger.info('New Data: {}'.format(formatted_records))
+        print('New Data: {}'.format(formatted_records))
 
     # override
     def handle(self):
         process = CrawlerProcess(get_project_settings())
-        try:
-            site = self.data['site']
-        except:
-            raise
-        process.crawl(site, data=self.data)
+        for site, site_records in self.formatted_records.items():
+            if site_records:
+                # call each site spider if data exists
+                process.crawl(site, data=site_records)
         process.start()
         # the script will block here until the crawling is finished
         process.stop()
 
 
 def lambda_handler(event, context):
-    logger.info('Crawal started.')
+    print('Crawal started.')
     records = event.get('Records', [])
     if not records:
-        logger.info('No records')
+        print('No records')
         return False
     else:
         formatted_records = {
@@ -52,9 +52,10 @@ def lambda_handler(event, context):
                 key: value['S'] for key, value in
                 record['dynamodb']['NewImage'].items()
             }
-            if queue_data.get('status') != 'completed':
+            if queue_data.get('processing_status') != 'completed':
                 formatted_records[queue_data['site']].append(queue_data)
-        for site, site_records in formatted_records.items():
-            h = LambdaHandler(data=site_records)
-            h.handle()
+
+        # pass the formatted data to LambdaHandler
+        h = LambdaHandler(formatted_records=formatted_records)
+        h.handle()
     return True
