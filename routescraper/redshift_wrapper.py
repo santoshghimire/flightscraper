@@ -71,6 +71,18 @@ class RedshiftWrapper(object):
         self.conn.commit()
         return True
 
+    def get_todays_data_count(self):
+        """select count(*) from flightinfo where crawl_date=2017-01-19;"""
+        cur = self.conn.cursor()
+        cur.execute(
+            """select count(*) from flightinfo
+            where crawl_date=%(crawl_date)s;""",
+            {'crawl_date': datetime.today().strftime("%Y-%m-%d")}
+        )
+        rows = cur.fetchall()
+        num_data = int(rows[0][0])
+        return num_data
+
     def close(self):
         try:
             self.conn.close()
@@ -98,4 +110,5 @@ if __name__ == '__main__':
     #     'fare_class': ''
     # }
     # r.insert_row(item)
+    r.get_todays_data_count()
     r.close()

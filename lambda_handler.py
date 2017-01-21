@@ -4,6 +4,9 @@ from abc import ABCMeta, abstractmethod
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
+from routescraper.spiders.airasia import AirAsiaSpider
+from routescraper.spiders.jetstar import JetStarSpider
+
 # logger = logging.getLogger()
 # logger.setLevel(logging.INFO)
 
@@ -28,7 +31,12 @@ class LambdaHandler(BaseLambdaHandler):
         for site, site_records in self.formatted_records.items():
             if site_records:
                 # call each site spider if data exists
-                process.crawl(site, data=site_records)
+                if site == 'airasia':
+                    process.crawl(AirAsiaSpider, data=site_records)
+                elif site == 'jetstar':
+                    process.crawl(JetStarSpider, data=site_records)
+                else:
+                    pass
         process.start()
         # the script will block here until the crawling is finished
         process.stop()

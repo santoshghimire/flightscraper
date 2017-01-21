@@ -3,9 +3,8 @@ import scrapy
 import sys
 import codecs
 import locale
-# import json
 import urlparse
-import uuid
+# import uuid
 from datetime import datetime, timedelta
 
 from routescraper.items import RouteItem
@@ -35,7 +34,7 @@ class AirAsiaSpider(scrapy.Spider):
                 'num_child': '0',
                 'num_infant': '0',
                 'site': 'airasia',
-                'uuid': str(uuid.uuid4())
+                'uuid': 'b8292192-a4cf-44a6-a256-697d387749f6'
             }]
             print('From cmd, using dummy input data', data)
         for record in data:
