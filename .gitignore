@@ -131,3 +131,7 @@ zope
 easy_install.py
 ipaddress.py
 six.py
+*.dist-info
+.libs_cffi_backend
+*.so
+*.pth

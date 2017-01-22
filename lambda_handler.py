@@ -31,6 +31,7 @@ class LambdaHandler(BaseLambdaHandler):
         for site, site_records in self.formatted_records.items():
             if site_records:
                 # call each site spider if data exists
+                print("New code")
                 if site == 'airasia':
                     process.crawl(AirAsiaSpider, data=site_records)
                 elif site == 'jetstar':

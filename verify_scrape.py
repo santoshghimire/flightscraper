@@ -4,6 +4,9 @@ from datetime import datetime
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
+from routescraper.spiders.airasia import AirAsiaSpider
+from routescraper.spiders.jetstar import JetStarSpider
+
 from routescraper.dynamodb_wrapper import scan_item
 from routescraper.redshift_wrapper import RedshiftWrapper
 
@@ -65,17 +68,49 @@ class CrawlVerifier(object):
         for site, site_records in formatted_records.items():
             if site_records:
                 # call each site spider if data exists
-                process.crawl(site, data=site_records)
+                if site == 'airasia':
+                    process.crawl(AirAsiaSpider, data=site_records)
+                elif site == 'jetstar':
+                    process.crawl(JetStarSpider, data=site_records)
+                else:
+                    pass
         process.start()
         # the script will block here until the crawling is finished
         process.stop()
 
-
-class Email(object):
-    """docstring for Email"""
-    def __init__(self):
+    def send_email(self, to, subject, body):
         client = boto3.client('ses', region_name='us-east-1')
-        print(client)
+        response = client.send_email(
+            Source='santosh.ghimire33@gmail.com',
+            Destination={
+                'ToAddresses': [
+                    to,
+                ],
+                # 'CcAddresses': [
+                #     'string',
+                # ],
+                # 'BccAddresses': [
+                #     'string',
+                # ]
+            },
+            Message={
+                'Subject': {
+                    'Data': subject,
+                    'Charset': 'UTF-8'
+                },
+                'Body': {
+                    'Text': {
+                        'Data': body,
+                        'Charset': 'UTF-8'
+                    },
+                    # 'Html': {
+                    #     'Data': 'string',
+                    #     'Charset': 'string'
+                    # }
+                }
+            },
+        )
+        print(response)
 
 
 if __name__ == '__main__':
