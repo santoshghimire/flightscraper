@@ -41,7 +41,8 @@ class RedshiftWrapper(object):
                 crawl_date VARCHAR (255) NOT NULL,
                 price Real NOT NULL,
                 days_to_flight Integer NOT NULL,
-                currency VARCHAR (255)
+                currency VARCHAR (255),
+                site VARCHAR (255)
             );
         """
         cur.execute(query)
@@ -58,13 +59,13 @@ class RedshiftWrapper(object):
                 uuid, airline_name, origin, destination, num_adult,
                 num_child, num_infant, flight_number, fare_class,
                 departure_date, arrival_date, price_date,
-                crawl_date, price, days_to_flight, currency)
+                crawl_date, price, days_to_flight, currency, site)
                 VALUES (
                     %(uuid)s, %(airline_name)s, %(origin)s, %(destination)s,
                     %(num_adult)s, %(num_child)s, %(num_infant)s,
                     %(flight_number)s, %(fare_class)s, %(departure_date)s,
                     %(arrival_date)s, %(price_date)s, %(crawl_date)s,
-                    %(price)s, %(days_to_flight)s, %(currency)s
+                    %(price)s, %(days_to_flight)s, %(currency)s, %(site)s
                 )
             """, item
         )
@@ -92,7 +93,7 @@ class RedshiftWrapper(object):
 
 if __name__ == '__main__':
     r = RedshiftWrapper()
-    # r.create_table()
+    r.create_table()
     # item = {
     #     'airline_name': 'QZ - PT Indonesia AirAsia',
     #     'arrival_date': '2017-01-09 15:10',
@@ -110,5 +111,5 @@ if __name__ == '__main__':
     #     'fare_class': ''
     # }
     # r.insert_row(item)
-    r.get_todays_data_count()
+    # r.get_todays_data_count()
     r.close()

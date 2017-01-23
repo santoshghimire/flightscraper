@@ -67,6 +67,7 @@ class JetStarSpider(scrapy.Spider):
         item['num_infant'] = response.meta['num_infant']
         depart = response.meta['departure_date']
         item['uuid'] = response.meta['uuid']
+        item['site'] = 'jetstar'
 
         elem = response.xpath(
             "//div[contains(@class, 'fare-row js-fare-row')]"

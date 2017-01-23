@@ -25,3 +25,4 @@ class RouteItem(scrapy.Item):
     price = scrapy.Field()
     days_to_flight = scrapy.Field()
     currency = scrapy.Field()
+    site = scrapy.Field()

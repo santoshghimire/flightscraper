@@ -62,6 +62,7 @@ class AirAsiaSpider(scrapy.Spider):
         item['currency'] = params['cc'][0]
         depart = params['dd1'][0]
         item['uuid'] = params['uuid'][0]
+        item['site'] = 'airasia'
 
         # get a list of all prices
         prices = response.xpath(

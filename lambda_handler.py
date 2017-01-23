@@ -31,7 +31,7 @@ class LambdaHandler(BaseLambdaHandler):
         for site, site_records in self.formatted_records.items():
             if site_records:
                 # call each site spider if data exists
-                print("New code")
+                print("Latest code")
                 if site == 'airasia':
                     process.crawl(AirAsiaSpider, data=site_records)
                 elif site == 'jetstar':
@@ -65,6 +65,9 @@ def lambda_handler(event, context):
                 formatted_records[queue_data['site']].append(queue_data)
 
         # pass the formatted data to LambdaHandler
-        h = LambdaHandler(formatted_records=formatted_records)
-        h.handle()
+        if formatted_records['airasia'] or formatted_records['jetstar']:
+            h = LambdaHandler(formatted_records=formatted_records)
+            h.handle()
+        else:
+            print('No records to scrape')
     return True
