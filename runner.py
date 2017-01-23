@@ -27,12 +27,12 @@ def main():
             items['jetstar'].append(item)
         else:
             print("Unknown site {}".format(item['site']))
-
-    process = CrawlerProcess(get_project_settings())
+    if items['airasia'] or items['jetstar']:
+        process = CrawlerProcess(get_project_settings())
     for site, site_records in items.items():
-        if site == 'airasia':
+        if site == 'airasia' and site_records:
             process.crawl(AirAsiaSpider, data=site_records)
-        elif site == 'jetstar':
+        elif site == 'jetstar' and site_records:
             process.crawl(JetStarSpider, data=site_records)
         else:
             pass
