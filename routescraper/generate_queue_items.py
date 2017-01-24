@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from dynamodb_wrapper import batch_write
-import time
+# import time
 
 import logging
 logger = logging.getLogger('queueGen')
@@ -60,7 +60,7 @@ def generate():
             # batch write
             batch_write(table_name=table_name, items=items)
             logger.info('ok')
-            time.sleep(10)
+            # time.sleep(10)
     return True
 
 if __name__ == '__main__':
