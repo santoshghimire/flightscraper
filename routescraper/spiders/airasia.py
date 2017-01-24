@@ -69,7 +69,7 @@ class AirAsiaSpider(scrapy.Spider):
             "//div[@class='avail-fare-price']/text()").extract()
         # convert price to float for finding min price
         price_list = [
-            float(i.strip().replace('SGD', '').strip()) for i in prices
+            float(i.encode('utf-8').strip().replace('SGD', '').strip()) for i in prices
         ]
         min_price = min(price_list)
         item['price'] = min_price
