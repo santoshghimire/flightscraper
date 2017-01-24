@@ -81,21 +81,41 @@ class AirAsiaSpider(scrapy.Spider):
             actual_min_price + "')]" +
             "/ancestor::tr[@class='fare-dark-row']"
         )
-        # departure time
-        depart_time = detail_elem.xpath(
-            ".//tr[@class='fare-dark-row']/td[@class='avail-table-detail']"
-        )[0].xpath(".//div[@class='avail-table-bold']/text()").extract_first()
+        fare_elem = 'fare-dark-row'
+        if not detail_elem:
+            detail_elem = response.xpath(
+                "//div[@class='avail-fare-price'][contains(text(),'" +
+                actual_min_price + "')]" +
+                "/ancestor::tr[@class='fare-light-row']"
+            )
+            fare_elem = 'fare-light-row'
 
+        # departure time
+        depart_time_elem = detail_elem.xpath(
+            ".//tr[@class='" + fare_elem + "']/td"
+            "[@class='avail-table-detail']"
+        )
+        if depart_time_elem:
+            depart_time = depart_time_elem[0].xpath(
+                ".//div[@class='avail-table-bold']/text()").extract_first()
+        else:
+            depart_time = ''
         item['departure_date'] = depart + ' ' + depart_time
 
         # arrival time
-        arrive_time = detail_elem.xpath(
-            ".//tr[@class='fare-dark-row']/td[@class='avail-table-detail']"
-        )[1].xpath(".//div[@class='avail-table-bold']/text()").extract_first()
-
+        arrive_time_elem = detail_elem.xpath(
+            ".//tr[@class='" + fare_elem + "']/td"
+            "[@class='avail-table-detail']"
+        )
+        if arrive_time_elem:
+            arrive_time = arrive_time_elem[1].xpath(
+                ".//div[@class='avail-table-bold']/text()"
+            ).extract_first()
+        else:
+            arrive_time = ''
         # arrival day
         arrive_day = detail_elem.xpath(
-            ".//tr[@class='fare-dark-row']/td[@class='avail-table-detail']"
+            ".//tr[@class='" + fare_elem + "']/td[@class='avail-table-detail']"
         )[1].xpath(
             ".//div[@class='avail-table-next-day']/text()"
         ).extract_first()
