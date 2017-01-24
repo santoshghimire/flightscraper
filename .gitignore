@@ -135,3 +135,4 @@ six.py
 .libs_cffi_backend
 *.so
 *.pth
+logs
