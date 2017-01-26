@@ -168,5 +168,5 @@ if __name__ == '__main__':
     #     uuid=uuid_string
     # )
     # print(status)
-    delete_all_items(table_name=table_name)
-    create_table(table_name)
+    # delete_all_items(table_name=table_name)
+    # create_table(table_name)
