@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
+import re
 import sys
 import codecs
 import locale
@@ -8,6 +9,7 @@ import urlparse
 from datetime import datetime, timedelta
 
 from routescraper.items import RouteItem
+from routescraper.generate_queue_items import all_queue_items
 
 
 class AirAsiaSpider(scrapy.Spider):
@@ -21,22 +23,7 @@ class AirAsiaSpider(scrapy.Spider):
         reload(sys)
         sys.setdefaultencoding('utf-8')
         if not data:
-            today = datetime.today()
-            depart_obj = today + timedelta(days=2)
-            depart_date = depart_obj.strftime("%Y-%m-%d")
-            data = [{
-                'processing_status': 'pending',
-                'origin': 'SIN',
-                'destination': 'DPS',
-                'crawl_date': today.strftime("%Y-%m-%d"),
-                'departure_date': depart_date,
-                'num_adult': '1',
-                'num_child': '0',
-                'num_infant': '0',
-                'site': 'airasia',
-                'uuid': 'b8292192-a4cf-44a6-a256-697d387749f6'
-            }]
-            print('From cmd, using dummy input data', data)
+            data = all_queue_items('airasia')
         for record in data:
             url = (
                 "https://booking.airasia.com/Flight/Select?o1"
@@ -68,9 +55,10 @@ class AirAsiaSpider(scrapy.Spider):
         prices = response.xpath(
             "//div[@class='avail-fare-price']/text()").extract()
         # convert price to float for finding min price
-        price_list = [
-            float(i.encode('utf-8').strip().replace('SGD', '').strip()) for i in prices
-        ]
+        price_list = []
+        for p in prices:
+            price = re.findall("\d+\.\d+", p)
+            price_list.extend([float(i) for i in price])
         min_price = min(price_list)
         item['price'] = min_price
         actual_min_price = prices[price_list.index(min_price)]

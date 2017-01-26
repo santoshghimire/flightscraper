@@ -3,9 +3,9 @@ import scrapy
 import sys
 import codecs
 import locale
-import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 
+from routescraper.generate_queue_items import all_queue_items
 from routescraper.items import RouteItem
 
 
@@ -20,22 +20,7 @@ class JetStarSpider(scrapy.Spider):
         reload(sys)
         sys.setdefaultencoding('utf-8')
         if not data:
-            today = datetime.today()
-            depart_obj = today + timedelta(days=2)
-            depart_date = depart_obj.strftime("%Y-%m-%d")
-            data = [{
-                'processing_status': 'pending',
-                'origin': 'SIN',
-                'destination': 'DPS',
-                'crawl_date': today.strftime("%Y-%m-%d"),
-                'departure_date': depart_date,
-                'num_adult': '1',
-                'num_child': '0',
-                'num_infant': '0',
-                'site': 'jetstar',
-                'uuid': str(uuid.uuid4())
-            }]
-            print('From cmd, using dummy input data', data)
+            data = all_queue_items('jetstar')
         self.data = data
         super(JetStarSpider, self).__init__()
 
@@ -54,7 +39,7 @@ class JetStarSpider(scrapy.Spider):
             )
             yield scrapy.Request(
                 url, callback=self.parse_results,
-                meta=record
+                meta=record, dont_filter=True
             )
 
     def parse_results(self, response):

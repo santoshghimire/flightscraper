@@ -112,20 +112,20 @@ def delete_all_items(table_name):
 if __name__ == '__main__':
     table_name = 'flightscrapequeue'
     # # # 1. Create
-    item = {
-        'processing_status': 'pending',
-        'origin': 'SIN',
-        'destination': 'DPS',
-        'crawl_date': '2017-01-23',
-        'departure_date': '2017-01-24',
-        'num_adult': '1',
-        'num_child': '0',
-        'num_infant': '0',
-        'site': 'airasia'
-        # 'site': 'jetstar'
-    }
-    status = insert_item(table_name=table_name, item=item)
-    print(status)
+    # item = {
+    #     'processing_status': 'pending',
+    #     'origin': 'SIN',
+    #     'destination': 'DPS',
+    #     'crawl_date': '2017-01-23',
+    #     'departure_date': '2017-01-24',
+    #     'num_adult': '1',
+    #     'num_child': '0',
+    #     'num_infant': '0',
+    #     'site': 'airasia'
+    #     # 'site': 'jetstar'
+    # }
+    # status = insert_item(table_name=table_name, item=item)
+    # print(status)
     # # 2. scan
     # items = scan_item(table_name=table_name, status='pending')
     # print(len(items))
@@ -168,4 +168,5 @@ if __name__ == '__main__':
     #     uuid=uuid_string
     # )
     # print(status)
-    # delete_all_items(table_name=table_name)
+    delete_all_items(table_name=table_name)
+    create_table(table_name)
