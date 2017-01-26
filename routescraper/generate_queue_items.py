@@ -102,5 +102,5 @@ def all_queue_items(site='airasia'):
     return items
 
 if __name__ == '__main__':
-    # generate()
-    all_queue_items()
+    generate()
+    # all_queue_items()
