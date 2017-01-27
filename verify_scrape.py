@@ -140,27 +140,30 @@ class CrawlVerifier(object):
 
     def send_email(self, to, subject, body):
         client = boto3.client('ses', region_name='us-east-1')
-        response = client.send_email(
-            Source='santosh.ghimire33@gmail.com',
-            Destination={
-                'ToAddresses': to
-            },
-            Message={
-                'Subject': {
-                    'Data': subject,
-                    'Charset': 'UTF-8'
+        try:
+            response = client.send_email(
+                Source='santosh.ghimire33@gmail.com',
+                Destination={
+                    'ToAddresses': to
                 },
-                'Body': {
-                    'Text': {
-                        'Data': body,
+                Message={
+                    'Subject': {
+                        'Data': subject,
                         'Charset': 'UTF-8'
+                    },
+                    'Body': {
+                        'Text': {
+                            'Data': body,
+                            'Charset': 'UTF-8'
+                        }
                     }
                 }
-            }
-        )
-        if response['ResponseMetadata']['HTTPStatusCode'] == 200:
-            return True
-        else:
+            )
+            if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+                return True
+            else:
+                return False
+        except:
             return False
 
     def send_demo_email(self):
