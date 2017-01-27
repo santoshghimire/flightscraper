@@ -57,50 +57,58 @@ class JetStarSpider(scrapy.Spider):
         elem = response.xpath(
             "//div[contains(@class, 'fare-row js-fare-row')]"
         )
-        elem = elem[0]
-        depart_time = elem.xpath(
-            ".//div[@class="
-            "'columns fare__departure-time js-departure-time departuretime'"
-            "]/text()"
-        ).extract_first().strip()
-        am_pm = elem.xpath(
-            ".//div[@class="
-            "'columns fare__departure-time js-departure-time departuretime'"
-            "]/span/text()"
-        ).extract_first().strip()
-        full_depart_datetime = depart + ' ' + depart_time +\
-            ' ' + am_pm.upper()
-        depart_date_obj = datetime.strptime(
-            full_depart_datetime, "%Y-%m-%d %I:%M %p")
-        item['departure_date'] = depart_date_obj.strftime('%Y-%m-%d %H:%M')
-        item['days_to_flight'] = (depart_date_obj - datetime.today()).days
-        price = elem.xpath(
-            ".//span[@class='price js-price']/text()"
-        ).extract_first().strip()
-        item['price'] = float(price)
-        item['price_date'] = datetime.now().strftime('%Y-%m-%d')
-        item['currency'] = elem.xpath(
-            ".//span[@class='currency-symbol']/text()"
-        ).extract_first().strip()
+        try:
+            elem = elem[0]
+        except:
+            elem = None
+            self.logger.info('Flightinfo not available for {}'.format(depart))
 
-        item['flight_number'] = elem.xpath(
-            ".//div[@class='row fare__info-flight-number']"
-            "/div[@class='medium-11 columns']/strong/text()"
-        ).extract_first().strip()
+        if elem:
+            depart_time = elem.xpath(
+                ".//div[@class="
+                "'columns fare__departure-time "
+                "js-departure-time departuretime'"
+                "]/text()"
+            ).extract_first().strip()
+            am_pm = elem.xpath(
+                ".//div[@class="
+                "'columns fare__departure-time "
+                "js-departure-time departuretime'"
+                "]/span/text()"
+            ).extract_first().strip()
+            full_depart_datetime = depart + ' ' + depart_time +\
+                ' ' + am_pm.upper()
+            depart_date_obj = datetime.strptime(
+                full_depart_datetime, "%Y-%m-%d %I:%M %p")
+            item['departure_date'] = depart_date_obj.strftime('%Y-%m-%d %H:%M')
+            item['days_to_flight'] = (depart_date_obj - datetime.today()).days
+            price = elem.xpath(
+                ".//span[@class='price js-price']/text()"
+            ).extract_first().strip()
+            item['price'] = float(price)
+            item['price_date'] = datetime.now().strftime('%Y-%m-%d')
+            item['currency'] = elem.xpath(
+                ".//span[@class='currency-symbol']/text()"
+            ).extract_first().strip()
 
-        arrival_date = elem.xpath(
-            ".//strong[@class='arrivalstation']/text()"
-        ).extract_first().strip()
-        arrival_date = arrival_date.replace(',', '')
-        arrival_date_obj = datetime.strptime(
-            arrival_date, "%I:%M%p %A %d %B %Y")
-        item['arrival_date'] = arrival_date_obj.strftime('%Y-%m-%d %H:%M')
+            item['flight_number'] = elem.xpath(
+                ".//div[@class='row fare__info-flight-number']"
+                "/div[@class='medium-11 columns']/strong/text()"
+            ).extract_first().strip()
 
-        item['fare_class'] = elem.xpath(
-            ".//strong[@class='cabintype']/text()"
-        ).extract_first().strip()
-        item['airline_name'] = elem.xpath(
-            ".//strong[@class='operatedby']/text()"
-        ).extract_first().strip()
+            arrival_date = elem.xpath(
+                ".//strong[@class='arrivalstation']/text()"
+            ).extract_first().strip()
+            arrival_date = arrival_date.replace(',', '')
+            arrival_date_obj = datetime.strptime(
+                arrival_date, "%I:%M%p %A %d %B %Y")
+            item['arrival_date'] = arrival_date_obj.strftime('%Y-%m-%d %H:%M')
 
-        yield item
+            item['fare_class'] = elem.xpath(
+                ".//strong[@class='cabintype']/text()"
+            ).extract_first().strip()
+            item['airline_name'] = elem.xpath(
+                ".//strong[@class='operatedby']/text()"
+            ).extract_first().strip()
+
+            yield item

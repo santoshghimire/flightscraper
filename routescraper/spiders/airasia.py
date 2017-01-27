@@ -4,8 +4,6 @@ import re
 import sys
 import codecs
 import locale
-import urlparse
-# import uuid
 from datetime import datetime, timedelta
 
 from routescraper.items import RouteItem
@@ -15,7 +13,7 @@ from routescraper.generate_queue_items import all_queue_items
 class AirAsiaSpider(scrapy.Spider):
     name = "airasia"
     allowed_domains = ["airasia.com"]
-    start_urls = []
+    start_urls = ["http://www.airasia.com/ot/en/home.page?cid=1"]
 
     def __init__(self, data=None):
         sys.stdout = codecs.getwriter(
@@ -24,7 +22,11 @@ class AirAsiaSpider(scrapy.Spider):
         sys.setdefaultencoding('utf-8')
         if not data:
             data = all_queue_items('airasia')
-        for record in data:
+        self.data = data
+        super(AirAsiaSpider, self).__init__()
+
+    def parse(self, response):
+        for record in self.data:
             url = (
                 "https://booking.airasia.com/Flight/Select?o1"
                 "={0}&d1={1}&culture=en-GB&dd1={2}&ADT={3}&CHD=0"
@@ -34,22 +36,23 @@ class AirAsiaSpider(scrapy.Spider):
                     record['uuid']
                 )
             )
-            self.start_urls.append(url)
-        super(AirAsiaSpider, self).__init__()
+            yield scrapy.Request(
+                url, callback=self.parse_results,
+                meta=record, dont_filter=True
+            )
 
-    def parse(self, response):
+    def parse_results(self, response):
         item = RouteItem()
-        params = urlparse.parse_qs(response.url)
-        item['origin'] = params[
-            'https://booking.airasia.com/Flight/Select?o1'][0]
-        item['destination'] = params['d1'][0]
-        item['num_adult'] = params['ADT'][0]
-        item['num_child'] = params['CHD'][0]
-        item['num_infant'] = params['inl'][0]
-        item['currency'] = params['cc'][0]
-        depart = params['dd1'][0]
-        item['uuid'] = params['uuid'][0]
-        item['site'] = 'airasia'
+
+        item['origin'] = response.meta['origin']
+        item['destination'] = response.meta['destination']
+        item['num_adult'] = response.meta['num_adult']
+        item['num_child'] = response.meta['num_child']
+        item['num_infant'] = response.meta['num_infant']
+        depart = response.meta['departure_date']
+        item['uuid'] = response.meta['uuid']
+        item['site'] = 'jetstar'
+        item['currency'] = "SGD"
 
         # get a list of all prices
         prices = response.xpath(
