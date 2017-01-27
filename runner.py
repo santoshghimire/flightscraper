@@ -47,6 +47,6 @@ def main(site='both'):
     process.stop()
 
 if __name__ == '__main__':
-    # main()
-    main(site='airasia')
+    main()
+    # main(site='airasia')
     # main(site='jetstar')
