@@ -11,8 +11,8 @@ from routescraper.items import RouteItem
 
 class JetStarSpider(scrapy.Spider):
     name = "jetstar"
-    allowed_domains = ["jetstar.com"]
-    start_urls = ['http://www.jetstar.com/sg/en/home']
+    allowed_domains = ["jetstar.com", "airasia.com"]
+    start_urls = ['http://www.airasia.com/ot/en/home.page?cid=1']
 
     def __init__(self, data=None):
         sys.stdout = codecs.getwriter(
@@ -85,11 +85,16 @@ class JetStarSpider(scrapy.Spider):
             price = elem.xpath(
                 ".//span[@class='price js-price']/text()"
             ).extract_first().strip()
+            price = price.replace(',', '')
             item['price'] = float(price)
             item['price_date'] = datetime.now().strftime('%Y-%m-%d')
             item['currency'] = elem.xpath(
                 ".//span[@class='currency-symbol']/text()"
-            ).extract_first().strip()
+            ).extract_first()
+            if not item['currency']:
+                item['currency'] = '$'
+            else:
+                item['currency'] = item['currency'].strip()
 
             item['flight_number'] = elem.xpath(
                 ".//div[@class='row fare__info-flight-number']"
