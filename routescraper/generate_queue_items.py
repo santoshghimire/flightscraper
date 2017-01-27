@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from dynamodb_wrapper import batch_write
 import uuid
-# import time
+import time
 
 import logging
 logger = logging.getLogger('queueGen')
@@ -61,7 +61,7 @@ def generate():
             # batch write
             batch_write(table_name=table_name, items=items)
             logger.info('ok')
-            # time.sleep(10)
+            time.sleep(10)
     return True
 
 
@@ -103,4 +103,5 @@ def all_queue_items(site='airasia'):
 
 if __name__ == '__main__':
     generate()
-    # all_queue_items()
+    # all_items = all_queue_items()
+    # print(len(all_items))

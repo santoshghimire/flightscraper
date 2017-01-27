@@ -1,6 +1,7 @@
 import boto3
 import uuid
 from boto3.dynamodb.conditions import Attr
+from datetime import datetime
 
 
 def batch_write(table_name, items):
@@ -61,6 +62,16 @@ def scan_item(table_name, status, crawl_date):
     )
     items = response['Items']
     return items
+
+
+def get_today_queue_items_count(table_name):
+    crawl_date = datetime.today().strftime("%Y-%m-%d")
+    dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
+    table = dynamodb.Table(table_name)
+    response = table.scan(
+        FilterExpression=Attr('crawl_date').eq(crawl_date)
+    )
+    return len(response['Items'])
 
 
 def delete_item(table_name, uuid):
