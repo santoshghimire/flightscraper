@@ -7,7 +7,7 @@ from routescraper.spiders.jetstar import JetStarSpider
 from routescraper.dynamodb_wrapper import scan_item
 
 
-def main():
+def main(site='both'):
     """
     Scan items in dynamodb and start scrape.
     """
@@ -21,12 +21,18 @@ def main():
         'airasia': [], 'jetstar': []
     }
     for item in today_pending_items:
-        if item.get('site') == 'airasia':
+        if (
+            item.get('site') == 'airasia' and
+            (site == 'both' or site == 'airasia')
+        ):
             items['airasia'].append(item)
-        elif item.get('site') == 'jetstar':
+        elif (
+            item.get('site') == 'jetstar' and
+            (site == 'both' or site == 'jetstar')
+        ):
             items['jetstar'].append(item)
         else:
-            print("Unknown site {}".format(item['site']))
+            pass
     if items['airasia'] or items['jetstar']:
         process = CrawlerProcess(get_project_settings())
     for site, site_records in items.items():
@@ -41,4 +47,6 @@ def main():
     process.stop()
 
 if __name__ == '__main__':
-    main()
+    # main()
+    main(site='airasia')
+    # main(site='jetstar')
