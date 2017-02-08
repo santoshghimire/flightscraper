@@ -94,6 +94,7 @@ def scan_item(
 
 def get_today_queue_items_count(table_name):
     crawl_date = datetime.today().strftime("%Y-%m-%d")
+    crawl_date = "2017-02-08"
     items = scan_item(
         table_name=table_name, status='pending',
         crawl_date=crawl_date
@@ -156,8 +157,8 @@ def delete_all_items(table_name):
 
 
 if __name__ == '__main__':
-    # table_name = 'flightscrapequeue'
-    table_name = 'scrapetest'
+    table_name = 'flightscrapequeue'
+    # table_name = 'scrapetest'
 
     # # # 1. Create
     # item = {
@@ -216,7 +217,7 @@ if __name__ == '__main__':
     #     uuid=uuid_string
     # )
     # print(status)
-    delete_all_items(table_name=table_name)
+    # delete_all_items(table_name=table_name)
     # create_table(table_name='scrapetest')
     # length = get_today_queue_items_count(table_name='scrapetest')
     # print(length)

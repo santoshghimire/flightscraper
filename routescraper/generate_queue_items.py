@@ -18,8 +18,7 @@ def generate():
     all routes for next 365 days and insert
     to dynamodb queue table.
     """
-    # table_name = 'flightscrapequeue'
-    table_name = 'scrapetest'
+    table_name = 'flightscrapequeue'
     routes = [
         {"origin": "SIN", "destination": "DPS"},
         {"origin": "SIN", "destination": "BKK"},
@@ -82,7 +81,7 @@ def prepare_email(table_name):
     length = get_today_queue_items_count(table_name=table_name)
     logger.info("Inserted items for today: {}".format(length))
 
-    subject = 'QUEUE ITEM INSERTION STATS'
+    subject = 'DYNAMODB QUEUE ITEM INSERTION STATS'
     receipient = ['santosh.ghimire33@gmail.com', ]
     body = """
 Hi Santosh,
@@ -180,10 +179,7 @@ def all_queue_items(site='airasia'):
 
 if __name__ == '__main__':
     start = datetime.now()
-    # generate()
-    prepare_email(table_name='scrapetest')
-    # all_items = all_queue_items()
-    # print(len(all_items))
+    generate()
     total_seconds = (datetime.now() - start).total_seconds()
 
     # convert to human readable time

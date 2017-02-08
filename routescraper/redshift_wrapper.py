@@ -1,4 +1,3 @@
-import uuid
 import json
 import psycopg2
 from datetime import datetime
@@ -52,7 +51,6 @@ class RedshiftWrapper(object):
 
     def insert_row(self, item):
         cur = self.conn.cursor()
-        item['uuid'] = str(uuid.uuid4())
         item['crawl_date'] = datetime.today().strftime("%Y-%m-%d")
         cur.execute(
             """INSERT INTO flightinfo(
