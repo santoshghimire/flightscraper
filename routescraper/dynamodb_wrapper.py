@@ -1,5 +1,6 @@
 import boto3
 import uuid
+import time
 from boto3.dynamodb.conditions import Attr
 from datetime import datetime
 
@@ -9,9 +10,12 @@ def batch_write(table_name, items):
     table = dynamodb.Table(table_name)
     with table.batch_writer() as batch:
         for item in items:
-            item['uuid'] = str(uuid.uuid4())
             batch.put_item(Item=item)
     return True
+
+
+def new_batch_write(table_name, items):
+    pass
 
 
 def insert_item(table_name, item):
@@ -53,25 +57,48 @@ def update_item(table_name, item_uuid, new_status):
         return False
 
 
-def scan_item(table_name, status, crawl_date):
-    dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
-    table = dynamodb.Table(table_name)
-    response = table.scan(
-        FilterExpression=Attr('processing_status').eq(status) &
-        Attr('crawl_date').eq(crawl_date)
-    )
-    items = response['Items']
-    return items
+def scan_item(
+    table_name, status, crawl_date,
+    total_items=None, start_key=None,
+    table=None
+):
+    if not table:
+        dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
+        table = dynamodb.Table(table_name)
+    if not start_key:
+        response = table.scan(
+            FilterExpression=Attr('processing_status').eq(status) &
+            Attr('crawl_date').eq(crawl_date)
+        )
+    else:
+        response = table.scan(
+            FilterExpression=Attr('processing_status').eq(status) &
+            Attr('crawl_date').eq(crawl_date),
+            ExclusiveStartKey=start_key
+        )
+    if not total_items:
+        total_items = response['Items']
+    else:
+        total_items.extend(response['Items'])
+    if response.get('LastEvaluatedKey'):
+        start_key = response['LastEvaluatedKey']
+        return_items = scan_item(
+            table_name=table_name, status=status,
+            crawl_date=crawl_date, total_items=total_items,
+            start_key=start_key, table=table
+        )
+        return return_items
+    else:
+        return total_items
 
 
 def get_today_queue_items_count(table_name):
     crawl_date = datetime.today().strftime("%Y-%m-%d")
-    dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
-    table = dynamodb.Table(table_name)
-    response = table.scan(
-        FilterExpression=Attr('crawl_date').eq(crawl_date)
+    items = scan_item(
+        table_name=table_name, status='pending',
+        crawl_date=crawl_date
     )
-    return len(response['Items'])
+    return len(items)
 
 
 def delete_item(table_name, uuid):
@@ -104,24 +131,34 @@ def create_table(table_name):
             },
         ],
         ProvisionedThroughput={
-            'ReadCapacityUnits': 5,
-            'WriteCapacityUnits': 5
+            'ReadCapacityUnits': 10,
+            'WriteCapacityUnits': 10
         }
     )
+    if table:
+        print("Success !")
     return table
 
 
 def delete_all_items(table_name):
     dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
-    table = dynamodb.Table(table_name)
-    table.delete()
-    table = create_table(table_name)
-    if table:
-        print("Success !!")
+    try:
+        table = dynamodb.Table(table_name)
+        table.delete()
+    except:
+        print(
+            "Error in deletion. Table {} does not exist.".format(table_name))
+    time.sleep(5)
+    try:
+        table = create_table(table_name)
+    except:
+        print("Error in creating table {}".format(table_name))
 
 
 if __name__ == '__main__':
-    table_name = 'flightscrapequeue'
+    # table_name = 'flightscrapequeue'
+    table_name = 'scrapetest'
+
     # # # 1. Create
     # item = {
     #     'processing_status': 'pending',
@@ -179,5 +216,7 @@ if __name__ == '__main__':
     #     uuid=uuid_string
     # )
     # print(status)
-    # delete_all_items(table_name=table_name)
-    # create_table(table_name)
+    delete_all_items(table_name=table_name)
+    # create_table(table_name='scrapetest')
+    # length = get_today_queue_items_count(table_name='scrapetest')
+    # print(length)

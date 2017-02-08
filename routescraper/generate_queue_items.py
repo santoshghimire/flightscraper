@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
-from dynamodb_wrapper import batch_write
-import uuid
+from dynamodb_wrapper import batch_write, get_today_queue_items_count
+import boto3
 import time
 
 import logging
@@ -18,7 +18,8 @@ def generate():
     all routes for next 365 days and insert
     to dynamodb queue table.
     """
-    table_name = 'flightscrapequeue'
+    # table_name = 'flightscrapequeue'
+    table_name = 'scrapetest'
     routes = [
         {"origin": "SIN", "destination": "DPS"},
         {"origin": "SIN", "destination": "BKK"},
@@ -34,10 +35,11 @@ def generate():
         {"origin": "HKT", "destination": "SIN"}
     ]
     logger.info("Generating scraping queue items for next 365 days ...")
+    batch_items = []
+    today = datetime.today()
+    crawl_date = today.strftime("%Y-%m-%d")
     for count, site in enumerate(["airasia", "jetstar"]):
         for route in routes:
-            today = datetime.today()
-            items = []
             logger.info(
                 "{0}: {1} to {2}".format(
                     site.title(), route['origin'], route['destination']
@@ -46,23 +48,93 @@ def generate():
             for i in range(1, 366):
                 each_date = today + timedelta(days=i)
                 departure_date = each_date.strftime("%Y-%m-%d")
+                uuid = '_'.join([
+                    crawl_date, site, route['origin'], route['destination'],
+                    departure_date
+                ])
                 item = {
+                    'uuid': uuid,
                     'processing_status': 'pending',
                     'origin': route['origin'],
                     'destination': route['destination'],
-                    'crawl_date': today.strftime("%Y-%m-%d"),
+                    'crawl_date': crawl_date,
                     'departure_date': departure_date,
                     'num_adult': '1',
                     'num_child': '0',
                     'num_infant': '0',
                     'site': site
                 }
-                items.append(item)
-            # batch write
-            batch_write(table_name=table_name, items=items)
+                if len(batch_items) == 10:
+                    batch_write(table_name=table_name, items=batch_items)
+                    time.sleep(1)
+                    batch_items = []
+                batch_items.append(item)
+            time.sleep(1)
             logger.info('ok')
-            time.sleep(10)
+    if batch_items:
+        batch_write(table_name=table_name, items=batch_items)
+    prepare_email(table_name)
+
+
+def prepare_email(table_name):
+    # verify the total num of items
+    logger.info("Getting count of inserted items.")
+    length = get_today_queue_items_count(table_name=table_name)
+    logger.info("Inserted items for today: {}".format(length))
+
+    subject = 'QUEUE ITEM INSERTION STATS'
+    receipient = ['santosh.ghimire33@gmail.com', ]
+    body = """
+Hi Santosh,
+
+Here is the Flight Scrape queue item insertion stats:
+
+Total items inserted = {}
+Required = 8760
+Missing = {}
+
+Thanks !!
+            """.format(length, (8760 - length))
+    if length != 8760:
+        status = "[ERROR] "
+    else:
+        status = "[SUCCESS] "
+    send_email(
+        to=receipient,
+        subject=status + subject,
+        body=body
+    )
+    logger.info(status.strip())
     return True
+
+
+def send_email(to, subject, body):
+    client = boto3.client('ses', region_name='us-east-1')
+    try:
+        response = client.send_email(
+            Source='santosh.ghimire33@gmail.com',
+            Destination={
+                'ToAddresses': to
+            },
+            Message={
+                'Subject': {
+                    'Data': subject,
+                    'Charset': 'UTF-8'
+                },
+                'Body': {
+                    'Text': {
+                        'Data': body,
+                        'Charset': 'UTF-8'
+                    }
+                }
+            }
+        )
+        if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+            return True
+        else:
+            return False
+    except:
+        return False
 
 
 def all_queue_items(site='airasia'):
@@ -81,27 +153,42 @@ def all_queue_items(site='airasia'):
         {"origin": "HKT", "destination": "SIN"}
     ]
     items = []
+    today = datetime.today()
+    crawl_date = today.strftime("%Y-%m-%d")
     for route in routes:
-        today = datetime.today()
         for i in range(1, 366):
             each_date = today + timedelta(days=i)
             departure_date = each_date.strftime("%Y-%m-%d")
+            uuid = '_'.join([
+                crawl_date, site, route['origin'], route['destination'],
+                departure_date
+            ])
             item = {
                 'processing_status': 'pending',
                 'origin': route['origin'],
                 'destination': route['destination'],
-                'crawl_date': today.strftime("%Y-%m-%d"),
+                'crawl_date': crawl_date,
                 'departure_date': departure_date,
                 'num_adult': '1',
                 'num_child': '0',
                 'num_infant': '0',
                 'site': site,
-                'uuid': str(uuid.uuid4())
+                'uuid': uuid
             }
             items.append(item)
     return items
 
 if __name__ == '__main__':
-    generate()
+    start = datetime.now()
+    # generate()
+    prepare_email(table_name='scrapetest')
     # all_items = all_queue_items()
     # print(len(all_items))
+    total_seconds = (datetime.now() - start).total_seconds()
+
+    # convert to human readable time
+    m, s = divmod(total_seconds, 60)
+    h, m = divmod(m, 60)
+    natural_time = "%d:%02d:%02d" % (h, m, s)
+
+    logger.info("Total time taken: {} ".format(natural_time))
