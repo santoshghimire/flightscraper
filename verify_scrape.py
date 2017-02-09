@@ -1,4 +1,5 @@
 import boto3
+import time
 
 from datetime import datetime
 from scrapy.crawler import CrawlerProcess
@@ -57,7 +58,7 @@ class CrawlVerifier(object):
             rs_item_count)
         body += redshift_msg
         logger.info(redshift_msg)
-
+        time.sleep(60)
         # Count of completed queue items in DynamoDB
         completed_items = scan_item(
             table_name=self.table_name, status='completed',
@@ -82,7 +83,7 @@ class CrawlVerifier(object):
             )
             pending_items_len = len(pending_items)
 
-        pending_msg = "Total pending/failed items: {}".format(
+        pending_msg = "Total pending/failed items: {}\n".format(
             pending_items_len)
         body += pending_msg
         logger.info(pending_msg)

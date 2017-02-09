@@ -82,6 +82,7 @@ def scan_item(
         total_items.extend(response['Items'])
     if response.get('LastEvaluatedKey'):
         start_key = response['LastEvaluatedKey']
+        time.sleep(30)
         return_items = scan_item(
             table_name=table_name, status=status,
             crawl_date=crawl_date, total_items=total_items,
