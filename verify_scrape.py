@@ -9,7 +9,7 @@ from routescraper.spiders.airasia import AirAsiaSpider
 from routescraper.spiders.jetstar import JetStarSpider
 
 from routescraper.dynamodb_wrapper import (
-    scan_item, get_today_queue_items_count
+    scan_item
 )
 from routescraper.redshift_wrapper import RedshiftWrapper
 
@@ -40,36 +40,43 @@ class CrawlVerifier(object):
     def completed_items_today(self):
         today = datetime.today().strftime("%Y-%m-%d")
         subject = "Scraper Report for {}".format(today)
-        today_count = get_today_queue_items_count(self.table_name)
+        pending_items = scan_item(
+            table_name=self.table_name, status='pending',
+            crawl_date=today
+        )
+        today_pending_count = len(pending_items)
 
         # Construct Email body
         body = (
             "Here is the stats for Flightinfo scrape "
             "of Airasia and Jetstar for {}:\n\n".format(today)
         )
-        today_count_msg = "Items to be scraped today: {}\n".format(today_count)
-        body += today_count_msg
-        logger.info(today_count_msg)
 
         # Count of scraped items in RedShift Database
         rs_item_count = self.rs.get_todays_data_count()
         self.rs.close()
         redshift_msg = "Flightinfo Items in Redshift: {}\n".format(
             rs_item_count)
-        body += redshift_msg
-        logger.info(redshift_msg)
+
         time.sleep(60)
         # Count of completed queue items in DynamoDB
         completed_items = scan_item(
             table_name=self.table_name, status='completed',
             crawl_date=today
         )
+        today_count = today_pending_count + completed_items
+        today_count_msg = "Items to be scraped today: {}\n".format(today_count)
+        body += today_count_msg
+        logger.info(today_count_msg)
+
+        body += redshift_msg
+        logger.info(redshift_msg)
+
         dynamo_complete_msg = "Completed queue items in Dynamodb: {}\n".format(
             len(completed_items))
         body += dynamo_complete_msg
         logger.info(dynamo_complete_msg)
 
-        pending_items_len = 0
         # Both Should be equal to 8760
         if rs_item_count != len(completed_items):
             # COUNT MISMATCH
@@ -77,21 +84,16 @@ class CrawlVerifier(object):
             mismatch_msg = "Count Mismatch, some items are pending/failed\n"
             body += mismatch_msg
             logger.info(mismatch_msg)
-            pending_items = scan_item(
-                table_name=self.table_name, status='pending',
-                crawl_date=today
-            )
-            pending_items_len = len(pending_items)
 
         pending_msg = "Total pending/failed items: {}\n".format(
-            pending_items_len)
+            today_pending_count)
         body += pending_msg
         logger.info(pending_msg)
 
-        if pending_items_len:
+        if today_pending_count:
             recrawl_msg = (
                 "Recrawl started for {} pending/failed items\n".format(
-                    pending_items_len
+                    today_pending_count
                 )
             )
             body += recrawl_msg
@@ -108,7 +110,7 @@ class CrawlVerifier(object):
         else:
             logger.info("Error in sending email")
         # UNCOMMENT THE FOLLOWING TO ALLOW RECRAWL OF PENDING/FAILED ITEMS
-        if pending_items_len:
+        if today_pending_count:
             # format pending items and recrawl them
             formatted_records = self.format_records(pending_items)
 
