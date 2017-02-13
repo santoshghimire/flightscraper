@@ -4,7 +4,7 @@ from scrapy.utils.project import get_project_settings
 
 from routescraper.spiders.airasia import AirAsiaSpider
 from routescraper.spiders.jetstar import JetStarSpider
-from routescraper.dynamodb_wrapper import scan_item
+from routescraper.dynamodb_wrapper import query_item
 
 
 def main(site='both'):
@@ -12,7 +12,7 @@ def main(site='both'):
     Scan items in dynamodb and start scrape.
     """
     table_name = 'flightscrapequeue'
-    today_pending_items = scan_item(
+    today_pending_items = query_item(
         table_name=table_name,
         status='pending',
         crawl_date=datetime.today().strftime("%Y-%m-%d")
@@ -46,7 +46,17 @@ def main(site='both'):
     # the script will block here until the crawling is finished
     process.stop()
 
+
+def is_odd(num):
+    if num % (num / 2):
+        return True
+    else:
+        return False
+
 if __name__ == '__main__':
-    main()
-    # main(site='airasia')
-    # main(site='jetstar')
+    sites = ['airasia', 'jetstar']
+    today = datetime.today().day
+    if is_odd(today):
+        main(site=sites[0])
+    else:
+        main(site=sites[1])

@@ -1,6 +1,7 @@
 import boto3
 import uuid
 import time
+from boto3.dynamodb.conditions import Key
 from boto3.dynamodb.conditions import Attr
 from datetime import datetime
 
@@ -12,10 +13,6 @@ def batch_write(table_name, items):
         for item in items:
             batch.put_item(Item=item)
     return True
-
-
-def new_batch_write(table_name, items):
-    pass
 
 
 def insert_item(table_name, item):
@@ -55,6 +52,44 @@ def update_item(table_name, item_uuid, new_status):
         return True
     else:
         return False
+
+
+def query_item(
+    table_name, status, crawl_date,
+    total_items=None, start_key=None,
+    table=None
+):
+    if not table:
+        dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
+        table = dynamodb.Table(table_name)
+    index_name = "crawl_date-processing_status-index"
+    if not start_key:
+        response = table.query(
+            IndexName=index_name,
+            KeyConditionExpression=Key('crawl_date').eq(crawl_date) &
+            Key('processing_status').eq(status)
+        )
+    else:
+        response = table.query(
+            IndexName=index_name,
+            KeyConditionExpression=Key('crawl_date').eq(crawl_date) &
+            Key('processing_status').eq(status),
+            ExclusiveStartKey=start_key
+        )
+    if not total_items:
+        total_items = response['Items']
+    else:
+        total_items.extend(response['Items'])
+    if response.get('LastEvaluatedKey'):
+        start_key = response['LastEvaluatedKey']
+        return_items = query_item(
+            table_name=table_name, status=status,
+            crawl_date=crawl_date, total_items=total_items,
+            start_key=start_key, table=table
+        )
+        return return_items
+    else:
+        return total_items
 
 
 def scan_item(
@@ -176,8 +211,13 @@ if __name__ == '__main__':
     # status = insert_item(table_name=table_name, item=item)
     # print(status)
     # # 2. scan
-    # items = scan_item(table_name=table_name, status='pending')
-    # print(len(items))
+    # today = datetime.today().strftime("%Y-%m-%d")
+    # pending_items = query_item(
+    #     table_name=table_name, status='pending', crawl_date=today)
+    # print('pending', len(pending_items))
+    # completed_items = query_item(
+    #     table_name=table_name, status='completed', crawl_date=today)
+    # print('completed', len(completed_items))
     # # 3. Update
     # response = update_item(
     #     table_name=table_name, item_uuid=items[0]['uuid'],

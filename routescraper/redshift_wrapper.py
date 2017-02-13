@@ -71,7 +71,6 @@ class RedshiftWrapper(object):
         return True
 
     def get_todays_data_count(self):
-        """select count(*) from flightinfo where crawl_date=2017-01-19;"""
         cur = self.conn.cursor()
         cur.execute(
             """select count(*) from flightinfo
