@@ -35,8 +35,8 @@ class CrawlVerifier(object):
     rs = RedshiftWrapper()
 
     # Email default params
-    # receipients = ['hiteshsc@gmail.com', 'santosh.ghimire33@gmail.com', ]
-    receipients = ['santosh.ghimire33@gmail.com', ]
+    receipients = ['hiteshsc@gmail.com', 'santosh.ghimire33@gmail.com', ]
+    # receipients = ['santosh.ghimire33@gmail.com', ]
 
     def completed_items_today(self):
         today = datetime.today().strftime("%Y-%m-%d")
@@ -119,7 +119,7 @@ class CrawlVerifier(object):
             formatted_records = self.format_records(pending_items)
 
             # call the recrawl method
-            # self.recrawl_items(formatted_records=formatted_records)
+            self.recrawl_items(formatted_records=formatted_records)
 
     def format_records(self, pending_items):
         formatted_records = {

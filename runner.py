@@ -9,7 +9,7 @@ from routescraper.dynamodb_wrapper import query_item
 
 def main(site='both'):
     """
-    Scan items in dynamodb and start scrape.
+    Query items in dynamodb and start scrape.
     """
     table_name = 'flightscrapequeue'
     today_pending_items = query_item(
