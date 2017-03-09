@@ -17,6 +17,13 @@ def main(site='both'):
         status='pending',
         crawl_date=datetime.today().strftime("%Y-%m-%d")
     )
+    # Debugging on
+    # print(len(today_pending_items))
+    # today_pending_items = today_pending_items[:20]
+    # from pprint import pprint
+    # pprint(today_pending_items)
+    # Debugging off
+    # return
     items = {
         'airasia': [], 'jetstar': []
     }

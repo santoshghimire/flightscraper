@@ -14,6 +14,7 @@ class RoutescraperPipeline(object):
         self.db = RedshiftWrapper()
 
     def process_item(self, item, spider):
+        # return item
         # Insert data to Redshift table
         self.db.insert_row(dict(item))
 

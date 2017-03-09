@@ -51,7 +51,7 @@ class AirAsiaSpider(scrapy.Spider):
         item['num_infant'] = response.meta['num_infant']
         depart = response.meta['departure_date']
         item['uuid'] = response.meta['uuid']
-        item['site'] = 'jetstar'
+        item['site'] = 'airasia'
         item['currency'] = "SGD"
 
         # get a list of all prices
