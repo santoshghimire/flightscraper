@@ -37,6 +37,7 @@ def generate():
     batch_items = []
     today = datetime.today()
     crawl_date = today.strftime("%Y-%m-%d")
+    total_items_count = 0
     for count, site in enumerate(["airasia", "jetstar"]):
         for route in routes:
             logger.info(
@@ -45,6 +46,18 @@ def generate():
                 )
             )
             for i in range(1, 366):
+                if i > 90 and i <= 180:
+                    # 3 to 6 months - scrape every 3 days
+                    if i % 3 != 1:
+                        continue
+                elif i > 180 and i <= 270:
+                    # 6 to 9 months - scrape every 5 days
+                    if i % 5 != 1:
+                        continue
+                elif i > 270:
+                    # over 9 months - scrape every 7 days
+                    if i % 7 != 1:
+                        continue
                 each_date = today + timedelta(days=i)
                 departure_date = each_date.strftime("%Y-%m-%d")
                 uuid = '_'.join([
@@ -68,10 +81,12 @@ def generate():
                     time.sleep(1)
                     batch_items = []
                 batch_items.append(item)
+                total_items_count += 1
             time.sleep(1)
             logger.info('ok')
     if batch_items:
         batch_write(table_name=table_name, items=batch_items)
+    logger.info("Total items = {}".format(total_items_count))
     prepare_email(table_name)
 
 
@@ -89,12 +104,12 @@ Hi Santosh,
 Here is the Flight Scrape queue item insertion stats:
 
 Total items inserted = {}
-Required = 8760
+Required = 3648
 Missing = {}
 
 Thanks !!
-            """.format(length, (8760 - length))
-    if length != 8760:
+            """.format(length, (3648 - length))
+    if length != 3648:
         status = "[ERROR] "
     else:
         status = "[SUCCESS] "
