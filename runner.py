@@ -54,9 +54,10 @@ def is_odd(num):
         return False
 
 if __name__ == '__main__':
-    sites = ['airasia', 'jetstar']
-    today = datetime.today().day
-    if is_odd(today):
-        main(site=sites[0])
-    else:
-        main(site=sites[1])
+    # sites = ['airasia', 'jetstar']
+    # today = datetime.today().day
+    # if is_odd(today):
+    #     main(site=sites[0])
+    # else:
+    #     main(site=sites[1])
+    main(site="both")
