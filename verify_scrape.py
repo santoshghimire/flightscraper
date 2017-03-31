@@ -35,8 +35,7 @@ class CrawlVerifier(object):
     rs = RedshiftWrapper()
 
     # Email default params
-    receipients = ['hiteshsc@gmail.com', 'santosh.ghimire33@gmail.com', ]
-    # receipients = ['santosh.ghimire33@gmail.com', ]
+    receipients = ['hiteshsc@gmail.com']
 
     def completed_items_today(self):
         today = datetime.today().strftime("%Y-%m-%d")

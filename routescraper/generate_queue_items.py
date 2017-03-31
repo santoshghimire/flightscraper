@@ -87,7 +87,7 @@ def generate():
     if batch_items:
         batch_write(table_name=table_name, items=batch_items)
     logger.info("Total items = {}".format(total_items_count))
-    prepare_email(table_name)
+    # prepare_email(table_name)
 
 
 def prepare_email(table_name):
